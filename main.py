@@ -69,13 +69,21 @@ class ProjectItem(BaseModel):
     tech_stack: list[str]
     live_url: Optional[str] = None
     github_url: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    context: Optional[str] = None
 
 class EducationItem(BaseModel):
     institution: Optional[str] = None
     degree: Optional[str] = None
     cgpa: Optional[str] = None
+    percentage: Optional[str] = None
     start_date: Optional[str] = None
     end_date: Optional[str] = None
+
+class LanguageItem(BaseModel):
+    language: str
+    proficiency: Optional[str] = None
 
 class CertificationItem(BaseModel):
     name: Optional[str] = None
@@ -95,6 +103,8 @@ class PortfolioData(BaseModel):
     education: list[EducationItem]
     certifications: list[CertificationItem]
     achievements: list[str]
+    languages: list[LanguageItem] = []
+    additional_info: list[str] = []
 
 # ─── Prompt ──────────────────────────────────────────────────────────────────
 
@@ -112,12 +122,15 @@ STRICT RULES:
 9. Skills must be grouped by their category headers found in the resume (e.g. "Languages", "Frameworks", "Tools"). If no categories exist, use a single group: {"category": "Skills", "items": [...]}.
 10. For GitHub and LinkedIn links: extract the FULL exact URL strings if present (e.g. 'https://github.com/username'), do NOT just extract the words 'GitHub' or 'LinkedIn'.
 11. In projects: separate the project title from the person's role (e.g. 'Project Lead').
-12. Extract CGPA/GPA for education if present.
+12. Extract CGPA/GPA for education if present. Also extract percentage scores (e.g. 79.8%) into the 'percentage' field — especially for school-level education (CBSE, ICSE, SSC, etc.).
 13. Extract all honors, awards, hackathon wins, or standalone accomplishments into the 'achievements' array.
 14. Do NOT invent or fabricate information. Only extract what is present.
 15. The "profile_image_url" should always be null unless explicitly listed in the resume text.
 16. Extract ALL experience entries, ALL projects, ALL education, ALL certifications — never truncate.
 17. Make NO assumptions. If an entire section (e.g. education) is missing, return []. If a specific piece of data (e.g. company name, degree) is missing, return null. The schema must match perfectly, but allow nulls where missing.
+18. For projects: extract a start_date and end_date if a timeline is mentioned (e.g. 'Dec 2024 - Feb 2025'). Also extract any context about when/where the project was done (e.g. 'Done during internship at Fulcrum GT') into the 'context' field.
+19. Extract spoken/written languages (e.g. English, Telugu) into the 'languages' array with their proficiency level. Do NOT mix spoken languages with programming languages.
+20. Extract any additional information about the candidate's availability, willingness to relocate, or openness to remote work into the 'additional_info' array as individual strings.
 
 JSON Schema:
 {
@@ -159,7 +172,10 @@ JSON Schema:
       "description": "string | null",
       "tech_stack": ["string"],
       "live_url": "string | null",
-      "github_url": "string | null"
+      "github_url": "string | null",
+      "start_date": "string | null",
+      "end_date": "string | null",
+      "context": "string | null"
     }
   ],
   "education": [
@@ -167,6 +183,7 @@ JSON Schema:
       "institution": "string | null",
       "degree": "string | null",
       "cgpa": "string | null",
+      "percentage": "string | null",
       "start_date": "string | null",
       "end_date": "string | null"
     }
@@ -178,7 +195,14 @@ JSON Schema:
       "url": "string | null"
     }
   ],
-  "achievements": ["string"]
+  "achievements": ["string"],
+  "languages": [
+    {
+      "language": "string",
+      "proficiency": "string | null"
+    }
+  ],
+  "additional_info": ["string"]
 }"""
 
 # ─── Helper ───────────────────────────────────────────────────────────────────
