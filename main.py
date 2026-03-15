@@ -45,7 +45,7 @@ class PersonalLinks(BaseModel):
     portfolio: Optional[str] = None
 
 class PersonalInfo(BaseModel):
-    full_name: str
+    full_name: Optional[str] = "Unknown"
     headline: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
